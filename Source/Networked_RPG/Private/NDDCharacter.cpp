@@ -12,6 +12,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
+#include "NDDAbilitySystemComponent.h"
+#include "NDDPlayerState.h"
+
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ANDDCharacter::ANDDCharacter()
@@ -56,6 +59,34 @@ void ANDDCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+void ANDDCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	ANDDPlayerState* playerState = GetPlayerState<ANDDPlayerState>();
+	if (playerState)
+	{
+		AbilitySystemComponent = Cast<UNDDAbilitySystemComponent>(playerState->GetAbilitySystemComponent());
+		AbilitySystemComponent->InitAbilityActorInfo(playerState, this);
+	}
+}
+
+// Client Only
+void ANDDCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	ANDDPlayerState* PS = GetPlayerState<ANDDPlayerState>();
+	if (PS)
+	{
+		// Set the ASC for clients. Server does this in PossessedBy.
+		AbilitySystemComponent = Cast<UNDDAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+
+		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

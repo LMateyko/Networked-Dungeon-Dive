@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "Logging/LogMacros.h"
 #include "NDDCharacter.generated.h"
 
@@ -12,6 +13,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAnimMontage;
+class UNDDAbilitySystemComponent;
 
 struct FInputActionValue;
 
@@ -56,6 +58,8 @@ class NETWORKED_RPG_API ANDDCharacter : public ACharacter
 public:
 	ANDDCharacter();
 
+	// Only called on the Server. Calls before Server's AcknowledgePossession.
+	virtual void PossessedBy(AController* NewController) override;
 
 protected:
 
@@ -70,11 +74,17 @@ protected:
 
 
 protected:
+
+	TWeakObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// To add mapping context
 	virtual void BeginPlay();
+
+	// Client Only
+	virtual void OnRep_PlayerState() override;
 
 public:
 	/** Returns CameraBoom subobject **/
