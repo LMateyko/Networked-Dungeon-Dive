@@ -14,4 +14,8 @@ class NETWORKED_RPG_API UNDDAbilitySystemComponent : public UAbilitySystemCompon
 {
 	GENERATED_BODY()
 	
+public:
+	bool bCharacterAbilitiesGiven = false;
+	bool bStartupEffectsApplied = false;
+
 };

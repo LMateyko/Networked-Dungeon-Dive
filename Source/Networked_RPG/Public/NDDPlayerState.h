@@ -9,6 +9,7 @@
 #include "NDDPlayerState.generated.h"
 
 class UNDDAbilitySystemComponent;
+class UNDDAttributeSetBase;
 
 /**
  * 
@@ -24,8 +25,32 @@ public:
 	// Inherited via IAbilitySystemInterface
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	class UNDDAttributeSetBase* GetAttributeSetBase() const;
+
+	/**
+	* Getters for attributes from UNDDAttributeSetBase. Returns Current Value unless otherwise specified.
+	*/
+
+	UFUNCTION(BlueprintCallable, Category = "ANDDPlayerState|Attributes")
+	float GetHealth() const;
+
+	UFUNCTION(BlueprintCallable, Category = "ANDDPlayerState|Attributes")
+	float GetMaxHealth() const;
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
 
+	UPROPERTY()
+	TObjectPtr<UNDDAttributeSetBase> AttributeSetBase;
+
+	FDelegateHandle HealthChangedDelegateHandle;
+	FDelegateHandle MaxHealthChangedDelegateHandle;
+
+	// Called when the game starts or when spawned
+	void BeginPlay() override;
+
+	// Attribute changed callbacks
+	virtual void HealthChanged(const FOnAttributeChangeData& Data);
+	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
 };

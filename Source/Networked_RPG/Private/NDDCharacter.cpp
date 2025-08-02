@@ -13,6 +13,7 @@
 #include "InputActionValue.h"
 
 #include "NDDAbilitySystemComponent.h"
+#include "NDDAttributeSetBase.h"
 #include "NDDPlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -61,6 +62,7 @@ void ANDDCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+// Server Only
 void ANDDCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -70,6 +72,11 @@ void ANDDCharacter::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent = Cast<UNDDAbilitySystemComponent>(playerState->GetAbilitySystemComponent());
 		AbilitySystemComponent->InitAbilityActorInfo(playerState, this);
+
+		InitializeAttributes();
+
+		// Only add abilities on the server. Bind input on both SetupPlayerInputComponent() and OnRep_PlayerState()
+		AddCharacterAbilities();
 	}
 }
 
@@ -86,6 +93,52 @@ void ANDDCharacter::OnRep_PlayerState()
 
 		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
 		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+
+		InitializeAttributes();
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Attributes and Abilities
+
+void ANDDCharacter::AddCharacterAbilities()
+{
+	// Grant abilities, but only on the server	
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->bCharacterAbilitiesGiven)
+	{
+		return;
+	}
+
+	for (TSubclassOf<UGameplayAbility>& StartupAbility : CharacterAbilities)
+	{
+		AbilitySystemComponent->GiveAbility(
+			FGameplayAbilitySpec(StartupAbility, 1, -1, this));
+
+		//FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID), static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
+	}
+
+	AbilitySystemComponent->bCharacterAbilitiesGiven = true;
+}
+
+void ANDDCharacter::InitializeAttributes()
+{
+	if (!AbilitySystemComponent.IsValid())
+		return;
+
+	if (!DefaultAttributes)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
+		return;
+	}
+
+	// Can run on Server and Client
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1, EffectContext);
+	if (NewHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
 	}
 }
 
@@ -127,8 +180,12 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
 {
-	// TODO: Fire GAS Action at this point
-	PlayAnimMontage(BasicAttackAnim);
+	//PlayAnimMontage(BasicAttackAnim);
+
+	if (!AbilitySystemComponent.IsValid())
+		return;
+
+	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag);
 }
 
 void ANDDCharacter::Move(const FInputActionValue& Value)

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "Logging/LogMacros.h"
 #include "NDDCharacter.generated.h"
 
@@ -13,7 +14,12 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAnimMontage;
+
+class UGameplayEffect;
+class UGameplayAbility;
+
 class UNDDAbilitySystemComponent;
+class UNDDAttributeSetBase;
 
 struct FInputActionValue;
 
@@ -76,6 +82,7 @@ protected:
 protected:
 
 	TWeakObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
+	TWeakObjectPtr<UNDDAttributeSetBase> AttributeSetBase;
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -85,6 +92,26 @@ protected:
 
 	// Client Only
 	virtual void OnRep_PlayerState() override;
+
+	UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	FGameplayTagContainer BasicAttackTag;
+
+	// Default abilities for this Character. These will be removed on Character death and regiven if Character respawns.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> CharacterAbilities;
+
+	// Default attributes for a character for initializing on spawn/respawn.
+	// This is an instant GE that overrides the values for attributes that get reset on spawn/respawn.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> DefaultAttributes;
+
+	// Grant abilities on the Server. The Ability Specs will be replicated to the owning client.
+	virtual void AddCharacterAbilities();
+
+	// Initialize the Character's attributes. Must run on Server but we run it on Client too
+	// so that we don't have to wait. The Server's replication to the Client won't matter since
+	// the values should be the same.
+	virtual void InitializeAttributes();
 
 public:
 	/** Returns CameraBoom subobject **/
