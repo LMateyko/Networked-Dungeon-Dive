@@ -26,7 +26,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class NETWORKED_RPG_API ANDDCharacter : public ACharacter
+class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -84,8 +84,13 @@ protected:
 	TWeakObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
 	TWeakObjectPtr<UNDDAttributeSetBase> AttributeSetBase;
 
+	bool AbilityBindingCompleted = false;
+
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// Implement IAbilitySystemInterface
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// To add mapping context
 	virtual void BeginPlay();

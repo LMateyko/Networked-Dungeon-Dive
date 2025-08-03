@@ -12,6 +12,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
+#include "../Networked_RPG.h"
+
 #include "NDDAbilitySystemComponent.h"
 #include "NDDAttributeSetBase.h"
 #include "NDDPlayerState.h"
@@ -111,12 +113,12 @@ void ANDDCharacter::AddCharacterAbilities()
 
 	for (TSubclassOf<UGameplayAbility>& StartupAbility : CharacterAbilities)
 	{
-		AbilitySystemComponent->GiveAbility(
-			FGameplayAbilitySpec(StartupAbility, 1, -1, this));
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, -1, this));
 
 		//FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID), static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
 	}
 
+	LogOnScreen(this, "Adding Character Abilities", FColor::Red, 10.0f);
 	AbilitySystemComponent->bCharacterAbilitiesGiven = true;
 }
 
@@ -178,14 +180,21 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
+UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent.Get();
+}
+
 void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
 {
-	//PlayAnimMontage(BasicAttackAnim);
-
 	if (!AbilitySystemComponent.IsValid())
 		return;
 
-	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag);
+	LogOnScreen(this, "Triggered Basic Attack.", FColor::Red, 0.2f);
+
+	//UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Attempting to Perform Basic Attack"), *GetNameSafe(this));
+
+	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag, true);
 }
 
 void ANDDCharacter::Move(const FInputActionValue& Value)
