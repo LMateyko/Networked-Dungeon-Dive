@@ -111,12 +111,19 @@ void ANDDCharacter::AddCharacterAbilities()
 		return;
 	}
 
-	for (TSubclassOf<UGameplayAbility>& StartupAbility : CharacterAbilities)
+	if (IsValid(AbilitySet))
 	{
-		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, -1, this));
-
-		//FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID), static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
+		InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get()));
 	}
+
+	//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent);
+
+	//for (TSubclassOf<UGameplayAbility>& StartupAbility : CharacterAbilities)
+	//{
+	//	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, -1, this));
+
+	//	//FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID), static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
+	//}
 
 	LogOnScreen(this, "Adding Character Abilities", FColor::Red, 10.0f);
 	AbilitySystemComponent->bCharacterAbilitiesGiven = true;
@@ -162,7 +169,7 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// Attacks
-		EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Triggered, this, &ANDDCharacter::BasicAttack);
+		//EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Triggered, this, &ANDDCharacter::BasicAttack);
 
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -173,6 +180,13 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANDDCharacter::Look);
+
+		// Bind all Ability Input
+		for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
+		{
+			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
+			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
+		}
 	}
 	else
 	{
@@ -185,16 +199,26 @@ UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent.Get();
 }
 
-void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
+//void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
+//{
+//	if (!AbilitySystemComponent.IsValid())
+//		return;
+//
+//	LogOnScreen(this, "Triggered Basic Attack.", FColor::Red, 0.2f);
+//
+//	//UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Attempting to Perform Basic Attack"), *GetNameSafe(this));
+//
+//	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag, true);
+//}
+
+void ANDDCharacter::AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput)
 {
-	if (!AbilitySystemComponent.IsValid())
-		return;
+	AbilitySystemComponent->AbilityLocalInputPressed((int32)abilityInput);
+}
 
-	LogOnScreen(this, "Triggered Basic Attack.", FColor::Red, 0.2f);
-
-	//UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Attempting to Perform Basic Attack"), *GetNameSafe(this));
-
-	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag, true);
+void ANDDCharacter::AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput)
+{
+	AbilitySystemComponent->AbilityLocalInputReleased((int32)abilityInput);
 }
 
 void ANDDCharacter::Move(const FInputActionValue& Value)

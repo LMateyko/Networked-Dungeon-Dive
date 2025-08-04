@@ -7,6 +7,9 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "Logging/LogMacros.h"
+
+#include "NDDAbilitySet.h"
+
 #include "NDDCharacter.generated.h"
 
 class USpringArmComponent;
@@ -22,8 +25,31 @@ class UNDDAbilitySystemComponent;
 class UNDDAttributeSetBase;
 
 struct FInputActionValue;
+struct FGameplayAbilitySpecHandle;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+USTRUCT()
+struct FNDDAbilityInputToInputActionBinding
+{
+	GENERATED_BODY();
+
+public:
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* InputAction;
+
+	UPROPERTY(EditDefaultsOnly)
+	ENDDAbilityInput AbilityInput;
+};
+
+//USTRUCT()
+//struct FNDDAbilityInputBindings
+//{
+//	GENERATED_BODY();
+//
+//	UPROPERTY(EditDefaultsOnly, Category = "Input")
+//	TArray<FNDDAbilityInputToInputActionBinding> Bindings;
+//};
 
 UCLASS(config = Game)
 class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystemInterface
@@ -42,12 +68,12 @@ class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystem
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	/** Basic Attack Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> BasicAttackAction;
+	///** Basic Attack Input Action */
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr<UInputAction> BasicAttackAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UAnimMontage> BasicAttackAnim;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr<UAnimMontage> BasicAttackAnim;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -61,6 +87,10 @@ class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystem
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> LookAction;
 
+	// Input Bindings For Abilities.
+	UPROPERTY(EditAnywhere, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TArray<FNDDAbilityInputToInputActionBinding> AbilityInputBindings;
+
 public:
 	ANDDCharacter();
 
@@ -69,8 +99,12 @@ public:
 
 protected:
 
-	/** Called for basic attack input **/
-	void BasicAttack(const FInputActionValue& Value);
+	///** Called for basic attack input **/
+	//void BasicAttack(const FInputActionValue& Value);
+
+	void AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput);
+
+	void AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput);
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -98,16 +132,24 @@ protected:
 	// Client Only
 	virtual void OnRep_PlayerState() override;
 
-	UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-	FGameplayTagContainer BasicAttackTag;
+	//UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	//FGameplayTagContainer BasicAttackTag;
 
-	// Default abilities for this Character. These will be removed on Character death and regiven if Character respawns.
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
-	TArray<TSubclassOf<UGameplayAbility>> CharacterAbilities;
+	//// Default abilities for this Character. These will be removed on Character death and regiven if Character respawns.
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	//TArray<TSubclassOf<UGameplayAbility>> CharacterAbilities;
+
+	// Binding of Ability to Inputs
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	UNDDAbilitySet* AbilitySet;
+
+	// Ability Handles granted by the ability set
+	UPROPERTY(Transient)
+	TArray<FGameplayAbilitySpecHandle> InitiallyGrantedAbilitySpecHandles;
 
 	// Default attributes for a character for initializing on spawn/respawn.
 	// This is an instant GE that overrides the values for attributes that get reset on spawn/respawn.
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
 	// Grant abilities on the Server. The Ability Specs will be replicated to the owning client.
