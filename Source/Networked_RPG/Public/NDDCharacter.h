@@ -42,15 +42,6 @@ public:
 	FGameplayTagContainer AbilityTag;
 };
 
-//USTRUCT()
-//struct FNDDAbilityInputBindings
-//{
-//	GENERATED_BODY();
-//
-//	UPROPERTY(EditDefaultsOnly, Category = "Input")
-//	TArray<FNDDAbilityInputToInputActionBinding> Bindings;
-//};
-
 UCLASS(config = Game)
 class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystemInterface
 {
@@ -67,13 +58,6 @@ class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystem
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
-
-	///** Basic Attack Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//TObjectPtr<UInputAction> BasicAttackAction;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	//TObjectPtr<UAnimMontage> BasicAttackAnim;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -97,50 +81,21 @@ public:
 	// Only called on the Server. Calls before Server's AcknowledgePossession.
 	virtual void PossessedBy(AController* NewController) override;
 
-protected:
-
-	///** Called for basic attack input **/
-	//void BasicAttack(const FInputActionValue& Value);
-
-	void AbilityInputBindingPressed(FGameplayTagContainer AbilityTag);
-
-	//void AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput);
-
-	//void AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput);
-
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 protected:
 
+	/* Variables */
 	TWeakObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
 	TWeakObjectPtr<UNDDAttributeSetBase> AttributeSetBase;
 
 	bool AbilityBindingCompleted = false;
 
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Implement IAbilitySystemInterface
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
-	// To add mapping context
-	virtual void BeginPlay();
-
-	// Client Only
-	virtual void OnRep_PlayerState() override;
-
-	//UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	//FGameplayTagContainer BasicAttackTag;
-
-	//// Default abilities for this Character. These will be removed on Character death and regiven if Character respawns.
-	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	//TArray<TSubclassOf<UGameplayAbility>> CharacterAbilities;
-
+	/* Properties */
 	// Binding of Ability to Inputs
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	UNDDAbilitySet* AbilitySet;
@@ -154,6 +109,29 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
+
+	/* Functions */
+	// Client Only
+	virtual void OnRep_PlayerState() override;
+
+	// To add mapping context
+	virtual void BeginPlay();
+
+	// APawn interface
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// Bound to enhanced input to activate ability by tag
+	void AbilityInputBindingPressed(FGameplayTagContainer AbilityTag);
+
+	// Called for movement input
+	void Move(const FInputActionValue& Value);
+
+	// Called for looking input
+	void Look(const FInputActionValue& Value);
+
+	// Implement IAbilitySystemInterface
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 	// Grant abilities on the Server. The Ability Specs will be replicated to the owning client.
 	virtual void AddCharacterAbilities();
 
@@ -161,16 +139,4 @@ protected:
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
 	// the values should be the same.
 	virtual void InitializeAttributes();
-
-	// Called from both SetupPlayerInputComponent and OnRep_PlayerState because of a potential race condition where the PlayerController might
-	// call ClientRestart which calls SetupPlayerInputComponent before the PlayerState is repped to the client so the PlayerState would be null in SetupPlayerInputComponent.
-	// Conversely, the PlayerState might be repped before the PlayerController calls ClientRestart so the Actor's InputComponent would be null in OnRep_PlayerState.
-	void BindASCInput();
-	bool ASCInputBound = false;
-
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };

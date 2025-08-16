@@ -14,22 +14,8 @@ TArray<FGameplayAbilitySpecHandle> UNDDAbilitySet::GrantAbilitiesToAbilitySystem
 
 	for (const auto abilitySetItem : AbilitySetItems)
 	{
-		handles.AddUnique(AbilitySystemComponent->GiveAbility(
-			FGameplayAbilitySpec(
-				abilitySetItem.GameplayAbility,
-				1,
-				static_cast<uint32>(abilitySetItem.InputKey),
-				InSourceObject
-			)));
-		
-		//handles.AddUnique(AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(abilitySetItem.GameplayAbility)));
-
-		//AbilitySystemComponent->GiveAbility(
-		//	FGameplayAbilitySpec(
-		//		abilitySetItem.GameplayAbility,
-		//		1, 
-		//		static_cast<int32>(abilitySetItem.GameplayAbility.GetDefaultObject()->AbilityInputID),
-		//		InSourceObject));
+		// Consider that FGameplayAbilitySpec can take level, input key, and SourceObject as well
+		handles.AddUnique(AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(abilitySetItem.GameplayAbility)));
 	}
 
 	return handles;

@@ -58,12 +58,6 @@ ANDDCharacter::ANDDCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
-void ANDDCharacter::BeginPlay()
-{
-	// Call the base class  
-	Super::BeginPlay();
-}
-
 // Server Only
 void ANDDCharacter::PossessedBy(AController* NewController)
 {
@@ -100,85 +94,18 @@ void ANDDCharacter::OnRep_PlayerState()
 
 		LogOnScreen(this, "InitAbilityActorInfo - OnRep_PlayerState", FColor::Blue, 10.0f);
 
-		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
-		//BindASCInput();
-
 		InitializeAttributes();
 	}
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Attributes and Abilities
-
-void ANDDCharacter::AddCharacterAbilities()
+void ANDDCharacter::BeginPlay()
 {
-	// Grant abilities, but only on the server	
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->bCharacterAbilitiesGiven)
-	{
-		return;
-	}
-
-	if (IsValid(AbilitySet))
-	{
-		InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this));
-		//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this);
-	}
-
-	//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent);
-
-	//for (TSubclassOf<UGameplayAbility>& StartupAbility : CharacterAbilities)
-	//{
-	//	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, -1, this));
-
-	//	//FGameplayAbilitySpec(StartupAbility, GetAbilityLevel(StartupAbility.GetDefaultObject()->AbilityID), static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
-	//}
-
-	LogOnScreen(this, "Adding Character Abilities", FColor::Red, 10.0f);
-	AbilitySystemComponent->bCharacterAbilitiesGiven = true;
-}
-
-void ANDDCharacter::InitializeAttributes()
-{
-	if (!AbilitySystemComponent.IsValid())
-		return;
-
-	if (!DefaultAttributes)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
-		return;
-	}
-
-	// Can run on Server and Client
-	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-	EffectContext.AddSourceObject(this);
-
-	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1, EffectContext);
-	if (NewHandle.IsValid())
-	{
-		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
-	}
-}
-
-void ANDDCharacter::BindASCInput()
-{
-	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
-	{
-		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/Networked_RPG"), FName("ENDDAbilityInputID"));
-		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent,
-			FGameplayAbilityInputBinds(
-				FString("ConfirmTarget"),
-				FString("CancelTarget"),
-				AbilityEnumAssetPath,
-				static_cast<int32>(ENDDAbilityInputID::Confirm),
-				static_cast<int32>(ENDDAbilityInputID::Cancel))
-		);
-
-		ASCInputBound = true;
-	}
+	// Call the base class  
+	Super::BeginPlay();
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Input
+// Input and Bindings
 
 void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -192,11 +119,8 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		// Attacks
-		//EnhancedInputComponent->BindAction(BasicAttackAction, ETriggerEvent::Triggered, this, &ANDDCharacter::BasicAttack);
-
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -211,23 +135,12 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
 		{
 			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressed, binding.AbilityTag);
-
-			//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
-			//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
 		}
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
-
-	// Bind player input to the AbilitySystemComponent. Also called in OnRep_PlayerState because of a potential race condition.
-	//BindASCInput();
-}
-
-UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent.Get();
 }
 
 void ANDDCharacter::AbilityInputBindingPressed(FGameplayTagContainer AbilityTag)
@@ -235,28 +148,6 @@ void ANDDCharacter::AbilityInputBindingPressed(FGameplayTagContainer AbilityTag)
 	LogOnScreen(this, "AbilityInputBindingPressed ", FColor::Green, 2.0f);
 	AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTag, true);
 }
-
-//void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
-//{
-//	if (!AbilitySystemComponent.IsValid())
-//		return;
-//
-//	LogOnScreen(this, "Triggered Basic Attack.", FColor::Red, 0.2f);
-//
-//	//UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Attempting to Perform Basic Attack"), *GetNameSafe(this));
-//
-//	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag, true);
-//}
-
-//void ANDDCharacter::AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput)
-//{
-//	AbilitySystemComponent->AbilityLocalInputPressed((int32)abilityInput);
-//}
-//
-//void ANDDCharacter::AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput)
-//{
-//	AbilitySystemComponent->AbilityLocalInputReleased((int32)abilityInput);
-//}
 
 void ANDDCharacter::Move(const FInputActionValue& Value)
 {
@@ -293,3 +184,51 @@ void ANDDCharacter::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Attributes and Abilities
+
+UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent.Get();
+}
+
+void ANDDCharacter::AddCharacterAbilities()
+{
+	// Grant abilities, but only on the server	
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || AbilitySystemComponent->bCharacterAbilitiesGiven)
+	{
+		return;
+	}
+
+	if (IsValid(AbilitySet))
+	{
+		InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this));
+	}
+
+	LogOnScreen(this, "Adding Character Abilities", FColor::Red, 10.0f);
+	AbilitySystemComponent->bCharacterAbilitiesGiven = true;
+}
+
+void ANDDCharacter::InitializeAttributes()
+{
+	if (!AbilitySystemComponent.IsValid())
+		return;
+
+	if (!DefaultAttributes)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
+		return;
+	}
+
+	// Can run on Server and Client
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1, EffectContext);
+	if (NewHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
+	}
+}
+

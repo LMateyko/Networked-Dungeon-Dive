@@ -22,9 +22,6 @@ struct FNDDAbilitySetItem
 public:
 	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	TSubclassOf<UNDDGameplayAbility> GameplayAbility;
-
-	UPROPERTY(EditDefaultsOnly, Category="Ability")
-	ENDDAbilityInput InputKey;
 };
 
 UCLASS()
