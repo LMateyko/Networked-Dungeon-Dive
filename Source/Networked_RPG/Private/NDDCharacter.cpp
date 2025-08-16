@@ -96,6 +96,9 @@ void ANDDCharacter::OnRep_PlayerState()
 		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
 		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 
+		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
+		BindASCInput();
+
 		InitializeAttributes();
 	}
 }
@@ -113,7 +116,8 @@ void ANDDCharacter::AddCharacterAbilities()
 
 	if (IsValid(AbilitySet))
 	{
-		InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get()));
+		//InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get()));
+		AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this);
 	}
 
 	//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent);
@@ -151,6 +155,24 @@ void ANDDCharacter::InitializeAttributes()
 	}
 }
 
+void ANDDCharacter::BindASCInput()
+{
+	if (!ASCInputBound && AbilitySystemComponent.IsValid() && IsValid(InputComponent))
+	{
+		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/Networked_RPG"), FName("ENDDAbilityInputID"));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent,
+			FGameplayAbilityInputBinds(
+				FString("ConfirmTarget"),
+				FString("CancelTarget"),
+				AbilityEnumAssetPath,
+				static_cast<int32>(ENDDAbilityInputID::Confirm),
+				static_cast<int32>(ENDDAbilityInputID::Cancel))
+		);
+
+		ASCInputBound = true;
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -182,21 +204,31 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANDDCharacter::Look);
 
 		// Bind all Ability Input
-		for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
-		{
-			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
-			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
-		}
+		//for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
+		//{
+		//	EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressed, binding.AbilityTag);
+
+		//	//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
+		//	//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
+		//}
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
+	// Bind player input to the AbilitySystemComponent. Also called in OnRep_PlayerState because of a potential race condition.
+	BindASCInput();
 }
 
 UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent.Get();
+}
+
+void ANDDCharacter::AbilityInputBindingPressed(FGameplayTagContainer AbilityTag)
+{
+	AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTag, true);
 }
 
 //void ANDDCharacter::BasicAttack(const FInputActionValue& Value)
@@ -211,15 +243,15 @@ UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
 //	AbilitySystemComponent->TryActivateAbilitiesByTag(BasicAttackTag, true);
 //}
 
-void ANDDCharacter::AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput)
-{
-	AbilitySystemComponent->AbilityLocalInputPressed((int32)abilityInput);
-}
-
-void ANDDCharacter::AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput)
-{
-	AbilitySystemComponent->AbilityLocalInputReleased((int32)abilityInput);
-}
+//void ANDDCharacter::AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput)
+//{
+//	AbilitySystemComponent->AbilityLocalInputPressed((int32)abilityInput);
+//}
+//
+//void ANDDCharacter::AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput)
+//{
+//	AbilitySystemComponent->AbilityLocalInputReleased((int32)abilityInput);
+//}
 
 void ANDDCharacter::Move(const FInputActionValue& Value)
 {

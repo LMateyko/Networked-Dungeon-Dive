@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "../Networked_RPG.h"
+#include "NDDGameplayAbility.h"
 #include "NDDAbilitySet.generated.h"
 
 class UGameplayAbility;
+class NDDGameplayAbility;
 class UAbilitySystemComponent;
 struct FGameplayAbilitySpecHandle;
 
@@ -19,7 +21,7 @@ struct FNDDAbilitySetItem
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category="Ability")
-	TSubclassOf<UGameplayAbility> GameplayAbility;
+	TSubclassOf<UNDDGameplayAbility> GameplayAbility;
 
 	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	ENDDAbilityInput InputKey;
@@ -34,5 +36,5 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Ability")
 	TArray<FNDDAbilitySetItem> AbilitySetItems;
 
-	TArray<FGameplayAbilitySpecHandle> GrantAbilitiesToAbilitySystem(UAbilitySystemComponent* AbilitySystemComponent) const;
+	TArray<FGameplayAbilitySpecHandle> GrantAbilitiesToAbilitySystem(UAbilitySystemComponent* AbilitySystemComponent, UObject* InSourceObject) const;
 };

@@ -40,6 +40,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	ENDDAbilityInput AbilityInput;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer AbilityTag;
 };
 
 //USTRUCT()
@@ -102,9 +105,11 @@ protected:
 	///** Called for basic attack input **/
 	//void BasicAttack(const FInputActionValue& Value);
 
-	void AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput);
+	void AbilityInputBindingPressed(FGameplayTagContainer AbilityTag);
 
-	void AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput);
+	//void AbilityInputBindingPressedHandler(ENDDAbilityInput abilityInput);
+
+	//void AbilityInputBindingReleasedHandler(ENDDAbilityInput abilityInput);
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -159,6 +164,12 @@ protected:
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
 	// the values should be the same.
 	virtual void InitializeAttributes();
+
+	// Called from both SetupPlayerInputComponent and OnRep_PlayerState because of a potential race condition where the PlayerController might
+	// call ClientRestart which calls SetupPlayerInputComponent before the PlayerState is repped to the client so the PlayerState would be null in SetupPlayerInputComponent.
+	// Conversely, the PlayerState might be repped before the PlayerController calls ClientRestart so the Actor's InputComponent would be null in OnRep_PlayerState.
+	void BindASCInput();
+	bool ASCInputBound = false;
 
 public:
 	/** Returns CameraBoom subobject **/
