@@ -39,9 +39,6 @@ public:
 	UInputAction* InputAction;
 
 	UPROPERTY(EditDefaultsOnly)
-	ENDDAbilityInput AbilityInput;
-
-	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer AbilityTag;
 };
 

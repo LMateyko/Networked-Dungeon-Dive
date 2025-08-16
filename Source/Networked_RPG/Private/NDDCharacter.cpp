@@ -75,6 +75,8 @@ void ANDDCharacter::PossessedBy(AController* NewController)
 		AbilitySystemComponent = Cast<UNDDAbilitySystemComponent>(playerState->GetAbilitySystemComponent());
 		AbilitySystemComponent->InitAbilityActorInfo(playerState, this);
 
+		LogOnScreen(this, "InitAbilityActorInfo - PossessedBy", FColor::Blue, 10.0f);
+
 		InitializeAttributes();
 
 		// Only add abilities on the server. Bind input on both SetupPlayerInputComponent() and OnRep_PlayerState()
@@ -96,8 +98,10 @@ void ANDDCharacter::OnRep_PlayerState()
 		// Init ASC Actor Info for clients. Server will init its ASC when it possesses a new Actor.
 		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 
+		LogOnScreen(this, "InitAbilityActorInfo - OnRep_PlayerState", FColor::Blue, 10.0f);
+
 		// Bind player input to the AbilitySystemComponent. Also called in SetupPlayerInputComponent because of a potential race condition.
-		BindASCInput();
+		//BindASCInput();
 
 		InitializeAttributes();
 	}
@@ -116,8 +120,8 @@ void ANDDCharacter::AddCharacterAbilities()
 
 	if (IsValid(AbilitySet))
 	{
-		//InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get()));
-		AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this);
+		InitiallyGrantedAbilitySpecHandles.Append(AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this));
+		//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent.Get(), this);
 	}
 
 	//AbilitySet->GrantAbilitiesToAbilitySystem(AbilitySystemComponent);
@@ -204,13 +208,13 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANDDCharacter::Look);
 
 		// Bind all Ability Input
-		//for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
-		//{
-		//	EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressed, binding.AbilityTag);
+		for (const FNDDAbilityInputToInputActionBinding& binding : AbilityInputBindings)
+		{
+			EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressed, binding.AbilityTag);
 
-		//	//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
-		//	//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
-		//}
+			//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Triggered, this, &ANDDCharacter::AbilityInputBindingPressedHandler, binding.AbilityInput);
+			//EnhancedInputComponent->BindAction(binding.InputAction, ETriggerEvent::Completed, this, &ANDDCharacter::AbilityInputBindingReleasedHandler, binding.AbilityInput);
+		}
 	}
 	else
 	{
@@ -218,7 +222,7 @@ void ANDDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 
 	// Bind player input to the AbilitySystemComponent. Also called in OnRep_PlayerState because of a potential race condition.
-	BindASCInput();
+	//BindASCInput();
 }
 
 UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
@@ -228,6 +232,7 @@ UAbilitySystemComponent* ANDDCharacter::GetAbilitySystemComponent() const
 
 void ANDDCharacter::AbilityInputBindingPressed(FGameplayTagContainer AbilityTag)
 {
+	LogOnScreen(this, "AbilityInputBindingPressed ", FColor::Green, 2.0f);
 	AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTag, true);
 }
 
