@@ -17,6 +17,7 @@
 #include "NDDAbilitySystemComponent.h"
 #include "NDDAttributeSetBase.h"
 #include "NDDPlayerState.h"
+#include "NDDPlayerController.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -75,6 +76,12 @@ void ANDDCharacter::PossessedBy(AController* NewController)
 
 		// Only add abilities on the server. Bind input on both SetupPlayerInputComponent() and OnRep_PlayerState()
 		AddCharacterAbilities();
+
+		ANDDPlayerController* PC = Cast<ANDDPlayerController>(GetController());
+		if (PC)
+		{
+			PC->CreateHUD();
+		}
 	}
 }
 
@@ -95,6 +102,12 @@ void ANDDCharacter::OnRep_PlayerState()
 		LogOnScreen(this, "InitAbilityActorInfo - OnRep_PlayerState", FColor::Blue, 10.0f);
 
 		InitializeAttributes();
+
+		ANDDPlayerController* PC = Cast<ANDDPlayerController>(GetController());
+		if (PC)
+		{
+			PC->CreateHUD();
+		}
 	}
 }
 

@@ -7,13 +7,6 @@
 #include "AbilitySystemComponent.h"
 #include "NDDAttributeSetBase.generated.h"
 
-// Uses macros from AttributeSet.h
-#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
-	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
-
 /**
  * 
  */
@@ -37,12 +30,12 @@ public:
 	// Negative changes to Health should go through Damage meta attribute.
 	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
-	ATTRIBUTE_ACCESSORS(UNDDAttributeSetBase, Health)
+	ATTRIBUTE_ACCESSORS_BASIC(UNDDAttributeSetBase, Health)
 
 	// MaxHealth is its own attribute since GameplayEffects may modify it
 	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
-	ATTRIBUTE_ACCESSORS(UNDDAttributeSetBase, MaxHealth)
+	ATTRIBUTE_ACCESSORS_BASIC(UNDDAttributeSetBase, MaxHealth)
 
 protected: 
 	// Helper function to proportionally adjust the value of an attribute when it's associated max attribute changes.

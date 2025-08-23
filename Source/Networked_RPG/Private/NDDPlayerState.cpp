@@ -9,6 +9,11 @@ ANDDPlayerState::ANDDPlayerState()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UNDDAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
+
+	// Create the attribute set, this replicates by default
+	// Adding it as a subobject of the owning actor of an AbilitySystemComponent
+	// automatically registers the AttributeSet with the AbilitySystemComponent
+	AttributeSetBase = CreateDefaultSubobject<UNDDAttributeSetBase>(TEXT("AttributeSetBase"));
 }
 
 UAbilitySystemComponent* ANDDPlayerState::GetAbilitySystemComponent() const

@@ -14,6 +14,8 @@ UNDDAttributeSetBase::UNDDAttributeSetBase()
 
 void UNDDAttributeSetBase::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
+	Super::PreAttributeChange(Attribute, NewValue);
+
 	// If a Max value changes, adjust current to keep Current % of Current to Max
 	if (Attribute == GetMaxHealthAttribute()) // GetMaxHealthAttribute comes from the Macros defined at the top of the header
 	{
@@ -23,6 +25,8 @@ void UNDDAttributeSetBase::PreAttributeChange(const FGameplayAttribute& Attribut
 
 void UNDDAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
+	Super::PostGameplayEffectExecute(Data);
+
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		// Handle other health changes.
@@ -46,6 +50,14 @@ void UNDDAttributeSetBase::AdjustAttributeForMaxChange(FGameplayAttributeData& A
 	}
 }
 
+void UNDDAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UNDDAttributeSetBase, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UNDDAttributeSetBase, MaxHealth, COND_None, REPNOTIFY_Always);
+}
+
 void UNDDAttributeSetBase::OnRep_Health(const FGameplayAttributeData& OldHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UNDDAttributeSetBase, Health, OldHealth);
@@ -54,12 +66,4 @@ void UNDDAttributeSetBase::OnRep_Health(const FGameplayAttributeData& OldHealth)
 void UNDDAttributeSetBase::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UNDDAttributeSetBase, MaxHealth, OldMaxHealth);
-}
-
-void UNDDAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION_NOTIFY(UNDDAttributeSetBase, Health, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UNDDAttributeSetBase, MaxHealth, COND_None, REPNOTIFY_Always);
 }
