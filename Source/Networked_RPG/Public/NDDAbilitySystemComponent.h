@@ -6,6 +6,8 @@
 #include "AbilitySystemComponent.h"
 #include "NDDAbilitySystemComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedDamageDelegate, UNDDAbilitySystemComponent*, SourceASC, float, UnmitigatedDamage, float, MitigatedDamage);
+
 /**
  * 
  */
@@ -18,4 +20,8 @@ public:
 	bool bCharacterAbilitiesGiven = false;
 	bool bStartupEffectsApplied = false;
 
+	FReceivedDamageDelegate ReceivedDamage;
+
+	// Called from GDDamageExecCalculation. Broadcasts on ReceivedDamage whenever this ASC receives damage.
+	virtual void ReceiveDamage(UNDDAbilitySystemComponent* SourceASC, float UnmitigatedDamage, float MitigatedDamage);
 };

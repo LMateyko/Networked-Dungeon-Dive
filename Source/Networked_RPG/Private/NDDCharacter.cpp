@@ -245,3 +245,33 @@ void ANDDCharacter::InitializeAttributes()
 	}
 }
 
+bool ANDDCharacter::IsAlive() const
+{
+	float health = GetHealth();
+	float maxHealth = GetMaxHealth();
+
+	UE_LOG(LogTemp, Display, TEXT("%s current health: %f/%f"), *GetName(), health, maxHealth);
+
+	return true;
+}
+
+float ANDDCharacter::GetHealth() const
+{
+	if (AttributeSetBase.IsValid())
+	{
+		return AttributeSetBase->GetHealth();
+	}
+
+	return 0.0f;
+}
+
+float ANDDCharacter::GetMaxHealth() const
+{
+	if (AttributeSetBase.IsValid())
+	{
+		return AttributeSetBase->GetMaxHealth();
+	}
+
+	return 0.0f;
+}
+

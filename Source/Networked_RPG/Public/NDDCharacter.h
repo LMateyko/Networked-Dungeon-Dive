@@ -86,6 +86,15 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter")
+	virtual bool IsAlive() const;
+
+	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter|Attributes")
+	float GetHealth() const;
+
+	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter|Attributes")
+	float GetMaxHealth() const;
+
 protected:
 
 	/* Variables */
