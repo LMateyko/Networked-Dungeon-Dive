@@ -2,6 +2,7 @@
 
 
 #include "AsyncTaskAttributesChanged.h"
+#include "AsyncTaskCooldownChanged.h"
 
 UAsyncTaskAttributesChanged* UAsyncTaskAttributesChanged::ListenForAttributesChange(UAbilitySystemComponent* AbilitySystemComponent, TArray<FGameplayAttribute> Attributes)
 {
