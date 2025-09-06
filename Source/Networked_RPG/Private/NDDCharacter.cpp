@@ -247,7 +247,7 @@ void ANDDCharacter::InitializeAttributes()
 	FGameplayEffectSpecHandle defaultStateHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultState, 1, EffectContext);
 	if (defaultStateHandle.IsValid())
 	{
-		FActiveGameplayEffectHandle ActiveGEStateHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*defaultStateHandle.Data.Get(), AbilitySystemComponent.Get());
+		FActiveGameplayEffectHandle AbilityModeEffectSpecHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*defaultStateHandle.Data.Get(), AbilitySystemComponent.Get());
 	}
 }
 
