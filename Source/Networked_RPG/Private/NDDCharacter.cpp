@@ -238,10 +238,16 @@ void ANDDCharacter::InitializeAttributes()
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
 
-	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1, EffectContext);
-	if (NewHandle.IsValid())
+	FGameplayEffectSpecHandle defaultAttributeHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, 1, EffectContext);
+	if (defaultAttributeHandle.IsValid())
 	{
-		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), AbilitySystemComponent.Get());
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*defaultAttributeHandle.Data.Get(), AbilitySystemComponent.Get());
+	}
+
+	FGameplayEffectSpecHandle defaultStateHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultState, 1, EffectContext);
+	if (defaultStateHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEStateHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToTarget(*defaultStateHandle.Data.Get(), AbilitySystemComponent.Get());
 	}
 }
 

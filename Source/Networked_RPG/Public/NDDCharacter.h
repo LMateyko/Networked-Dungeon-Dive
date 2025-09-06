@@ -118,6 +118,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
+	// Gameplay Effect for setting the default state 
+	// This is an infinite GE that sets the Primary Mode for using skills
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	TSubclassOf<UGameplayEffect> DefaultState;
 
 	/* Functions */
 	// Client Only
