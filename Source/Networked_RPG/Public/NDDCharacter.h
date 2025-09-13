@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2025 Lucas Mateyko
 
 #pragma once
 
@@ -12,79 +12,23 @@
 
 #include "NDDCharacter.generated.h"
 
-class USpringArmComponent;
-class UCameraComponent;
-class UInputMappingContext;
-class UInputAction;
-class UAnimMontage;
-
 class UGameplayEffect;
-class UGameplayAbility;
 
 class UNDDAbilitySystemComponent;
 class UNDDAttributeSetBase;
 
-struct FInputActionValue;
 struct FGameplayAbilitySpecHandle;
+struct FGameplayEffectContextHandle;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
-
-USTRUCT()
-struct FNDDAbilityInputToInputActionBinding
-{
-	GENERATED_BODY();
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	UInputAction* InputAction;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTagContainer AbilityTag;
-};
 
 UCLASS(config = Game)
 class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> CameraBoom;
-
-	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr <UCameraComponent> FollowCamera;
-
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputMappingContext> DefaultMappingContext;
-
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> JumpAction;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> MoveAction;
-
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> LookAction;
-
-	// Input Bindings For Abilities.
-	UPROPERTY(EditAnywhere, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TArray<FNDDAbilityInputToInputActionBinding> AbilityInputBindings;
-
 public:
 	ANDDCharacter();
-
-	// Only called on the Server. Calls before Server's AcknowledgePossession.
-	virtual void PossessedBy(AController* NewController) override;
-
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter")
 	virtual bool IsAlive() const;
@@ -118,29 +62,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	TSubclassOf<UGameplayEffect> DefaultAttributes;
 
-	// Gameplay Effect for setting the default state 
-	// This is an infinite GE that sets the Primary Mode for using skills
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	TSubclassOf<UGameplayEffect> DefaultState;
-
 	/* Functions */
-	// Client Only
-	virtual void OnRep_PlayerState() override;
-
-	// To add mapping context
-	virtual void BeginPlay();
-
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// Bound to enhanced input to activate ability by tag
-	void AbilityInputBindingPressed(FGameplayTagContainer AbilityTag);
-
-	// Called for movement input
-	void Move(const FInputActionValue& Value);
-
-	// Called for looking input
-	void Look(const FInputActionValue& Value);
 
 	// Implement IAbilitySystemInterface
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -151,5 +73,6 @@ protected:
 	// Initialize the Character's attributes. Must run on Server but we run it on Client too
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
 	// the values should be the same.
-	virtual void InitializeAttributes();
+	void InitializeAttributes();
+	virtual void ApplyDefaultAttributesToEffectContext(FGameplayEffectContextHandle EffectContext);
 };
