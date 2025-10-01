@@ -4,6 +4,8 @@
 
 #include "NDDAbilitySystemComponent.h"
 #include "NDDAttributeSetBase.h"
+#include "AttachedUserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 ANDDEnemy::ANDDEnemy()
 {
@@ -36,24 +38,22 @@ void ANDDEnemy::BeginPlay()
 		InitializeAttributes();
 		AddCharacterAbilities();
 
-		//// Setup FloatingStatusBar UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
-		//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		//if (PC && PC->IsLocalPlayerController())
-		//{
-		//	if (UIFloatingStatusBarClass)
-		//	{
-		//		UIFloatingStatusBar = CreateWidget<UGDFloatingStatusBarWidget>(PC, UIFloatingStatusBarClass);
-		//		if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
-		//		{
-		//			UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
-
-		//			// Setup the floating status bar
-		//			UIFloatingStatusBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
-
-		//			UIFloatingStatusBar->SetCharacterName(CharacterName);
-		//		}
-		//	}
-		//}
+		// Setup FloatingStatusBar UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (PC && PC->IsLocalPlayerController())
+		{
+			// Create once, and skip on instant kill
+			if (ActiveHealthBar == nullptr)
+			{
+				ActiveHealthBar = CreateWidget<UAttachedUserWidget>(GetWorld(), HealthBarWidgetClass);
+				if (ActiveHealthBar)
+				{
+					ActiveHealthBar->AttachedActor = this;
+					// Throws Error due to missing main canvas? 
+					UAttachedUserWidget::AddToRootCanvasPanel(ActiveHealthBar);
+				}
+			}
+		}
 
 		// Attribute change callbacks
 		HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(this, &ANDDEnemy::HealthChanged);

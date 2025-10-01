@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "NDDCharacter.h"
 
+
 #include "NDDEnemy.generated.h"
 
 /**
@@ -27,14 +28,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UNDDAttributeSetBase> EnemyAttributeSetBase;
 
-	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
-	//TSubclassOf<class UNDDFloatingStatusBarWidget> UIFloatingStatusBarClass;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UUserWidget> HealthBarWidgetClass;
 
-	//UPROPERTY()
-	//class UNDDFloatingStatusBarWidget* UIFloatingStatusBar;
-
-	//UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
-	//class UWidgetComponent* UIFloatingStatusBarComponent;
+	UPROPERTY(Transient)
+	TObjectPtr<class UAttachedUserWidget> ActiveHealthBar;
 
 	virtual void BeginPlay() override;
 
