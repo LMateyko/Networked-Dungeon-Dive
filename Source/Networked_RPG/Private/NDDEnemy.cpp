@@ -5,6 +5,7 @@
 #include "NDDAbilitySystemComponent.h"
 #include "NDDAttributeSetBase.h"
 #include "AttachedUserWidget.h"
+#include "SWorldUserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 ANDDEnemy::ANDDEnemy()
@@ -49,8 +50,9 @@ void ANDDEnemy::BeginPlay()
 				if (ActiveHealthBar)
 				{
 					ActiveHealthBar->AttachedActor = this;
-					// Throws Error due to missing main canvas? 
-					UAttachedUserWidget::AddToRootCanvasPanel(ActiveHealthBar);
+					ActiveHealthBar->AddToViewport();
+					//// Throws Error due to missing main canvas? 
+					//UAttachedUserWidget::AddToRootCanvasPanel(ActiveHealthBar);
 				}
 			}
 		}
