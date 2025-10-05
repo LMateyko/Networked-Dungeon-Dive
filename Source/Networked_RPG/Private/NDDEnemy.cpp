@@ -46,6 +46,7 @@ void ANDDEnemy::BeginPlay()
 			// Create once, and skip on instant kill
 			if (ActiveHealthBar == nullptr)
 			{
+				// TODO: Pivot to the Widget Component Model that that each widget doesn't have to worry about positioning itself in 3D space. 
 				ActiveHealthBar = CreateWidget<UAttachedUserWidget>(GetWorld(), HealthBarWidgetClass);
 				if (ActiveHealthBar)
 				{
@@ -53,6 +54,8 @@ void ANDDEnemy::BeginPlay()
 					ActiveHealthBar->AddToViewport();
 					//// Throws Error due to missing main canvas? 
 					//UAttachedUserWidget::AddToRootCanvasPanel(ActiveHealthBar);
+
+					ActiveHealthBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
 				}
 			}
 		}
@@ -67,11 +70,11 @@ void ANDDEnemy::HealthChanged(const FOnAttributeChangeData& Data)
 {
 	float Health = Data.NewValue;
 
-	//// Update floating status bar
-	//if (UIFloatingStatusBar)
-	//{
-	//	UIFloatingStatusBar->SetHealthPercentage(Health / GetMaxHealth());
-	//}
+	// Update floating status bar
+	if (ActiveHealthBar)
+	{
+		ActiveHealthBar->SetHealthPercentage(Health / GetMaxHealth());
+	}
 
 	//// If the minion died, handle death
 	//if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))

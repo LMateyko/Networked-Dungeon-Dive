@@ -25,6 +25,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Transient, Category = "UI", meta = (ExposeOnSpawn = true))
 	TObjectPtr<AActor> AttachedActor;
 
+	// TODO: Pivot to a more status related Widget class. 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHealthPercentage(float HealthPercentage);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UOverlay> ParentOverlay;
