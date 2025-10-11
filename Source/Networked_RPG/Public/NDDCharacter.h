@@ -12,15 +12,8 @@
 
 #include "NDDCharacter.generated.h"
 
-class UGameplayEffect;
-
-class UNDDAbilitySystemComponent;
-class UNDDAttributeSetBase;
-
-struct FGameplayAbilitySpecHandle;
-struct FGameplayEffectContextHandle;
-
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, ANDDCharacter*, Character);
 
 UCLASS(config = Game)
 class NETWORKED_RPG_API ANDDCharacter : public ACharacter, public IAbilitySystemInterface
@@ -39,11 +32,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter|Attributes")
 	float GetMaxHealth() const;
 
+	virtual void KillCharacter();
+
 protected:
 
 	/* Variables */
-	TWeakObjectPtr<UNDDAbilitySystemComponent> AbilitySystemComponent;
-	TWeakObjectPtr<UNDDAttributeSetBase> AttributeSetBase;
+	TWeakObjectPtr<class UNDDAbilitySystemComponent> AbilitySystemComponent;
+	TWeakObjectPtr<class UNDDAttributeSetBase> AttributeSetBase;
+	FGameplayTag DeadTag;
+	FGameplayTag EffectRemoveOnDeathTag;
 
 	bool AbilityBindingCompleted = false;
 
@@ -51,16 +48,24 @@ protected:
 	/* Properties */
 	// Binding of Ability to Inputs
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	UNDDAbilitySet* AbilitySet;
+	TObjectPtr<UNDDAbilitySet> AbilitySet;
 
 	// Ability Handles granted by the ability set
 	UPROPERTY(Transient)
-	TArray<FGameplayAbilitySpecHandle> InitiallyGrantedAbilitySpecHandles;
+	TArray<struct FGameplayAbilitySpecHandle> InitiallyGrantedAbilitySpecHandles;
 
 	// Default attributes for a character for initializing on spawn/respawn.
 	// This is an instant GE that overrides the values for attributes that get reset on spawn/respawn.
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	TSubclassOf<UGameplayEffect> DefaultAttributes;
+	TSubclassOf<class UGameplayEffect> DefaultAttributes;
+
+	// Delegate for Reacting to Character Death
+	UPROPERTY(BlueprintAssignable, Category = "Death")
+	FCharacterDiedDelegate OnCharacterDied;
+
+	// Death Animation
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Death")
+	TObjectPtr<UAnimMontage> DeathMontage;
 
 	/* Functions */
 
@@ -74,5 +79,9 @@ protected:
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
 	// the values should be the same.
 	void InitializeAttributes();
-	virtual void ApplyDefaultAttributesToEffectContext(FGameplayEffectContextHandle EffectContext);
+	virtual void ApplyDefaultAttributesToEffectContext(struct FGameplayEffectContextHandle EffectContext);
+
+	// Character Cleanup when death is complete
+	UFUNCTION(BlueprintCallable, Category = "Death")
+	virtual void FinishDying();
 };

@@ -15,6 +15,9 @@ ANDDCharacter::ANDDCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
+	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Dead"));
+	EffectRemoveOnDeathTag = FGameplayTag::RequestGameplayTag(FName("Effect.RemoveOnDeath"));
 }
 
 
@@ -70,6 +73,11 @@ void ANDDCharacter::ApplyDefaultAttributesToEffectContext(FGameplayEffectContext
 	}
 }
 
+void ANDDCharacter::FinishDying()
+{
+	Destroy();
+}
+
 bool ANDDCharacter::IsAlive() const
 {
 	float health = GetHealth();
@@ -77,7 +85,7 @@ bool ANDDCharacter::IsAlive() const
 
 	UE_LOG(LogTemp, Display, TEXT("%s current health: %f/%f"), *GetName(), health, maxHealth);
 
-	return true;
+	return health > 0;
 }
 
 float ANDDCharacter::GetHealth() const
@@ -98,5 +106,31 @@ float ANDDCharacter::GetMaxHealth() const
 	}
 
 	return 0.0f;
+}
+
+void ANDDCharacter::KillCharacter()
+{
+	OnCharacterDied.Broadcast(this);
+
+	if (AbilitySystemComponent.IsValid())
+	{
+		AbilitySystemComponent->CancelAllAbilities();
+
+		FGameplayTagContainer EffectTagsToRemove;
+		EffectTagsToRemove.AddTag(EffectRemoveOnDeathTag);
+		int32 NumEffectsRemoved = AbilitySystemComponent->RemoveActiveEffectsWithTags(EffectTagsToRemove);
+
+		AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	}
+
+	// TODO: Figure out why the death Montage isn't playing. 
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage);
+	}
+	else
+	{
+		FinishDying();
+	}
 }
 

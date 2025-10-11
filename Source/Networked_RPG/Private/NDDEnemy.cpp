@@ -76,9 +76,9 @@ void ANDDEnemy::HealthChanged(const FOnAttributeChangeData& Data)
 		ActiveHealthBar->SetHealthPercentage(Health / GetMaxHealth());
 	}
 
-	//// If the minion died, handle death
-	//if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
-	//{
-	//	Die();
-	//}
+	// If the minion died, handle death
+	if (!IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))
+	{
+		KillCharacter();
+	}
 }
