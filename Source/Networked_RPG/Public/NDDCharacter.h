@@ -32,6 +32,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ANDDCharacter|Attributes")
 	float GetMaxHealth() const;
 
+	// Delegate for Reacting to Character Death
+	UPROPERTY(BlueprintAssignable, Category = "ANDDCharacter|Death")
+	FCharacterDiedDelegate OnCharacterDied;
+
 	virtual void KillCharacter();
 
 protected:
@@ -58,10 +62,6 @@ protected:
 	// This is an instant GE that overrides the values for attributes that get reset on spawn/respawn.
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	TSubclassOf<class UGameplayEffect> DefaultAttributes;
-
-	// Delegate for Reacting to Character Death
-	UPROPERTY(BlueprintAssignable, Category = "Death")
-	FCharacterDiedDelegate OnCharacterDied;
 
 	// Death Animation
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Death")
